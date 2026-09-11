@@ -1,0 +1,129 @@
+body {
+  background-color: #000000;
+  color: white;
+  margin: 0;
+  padding: 0 16px;
+}
+
+center {
+  display: block;
+  max-width: 700px;
+  margin: 0 auto;
+  padding: 24px 0;
+}
+
+h1 {
+  font-size: 2rem;
+  word-break: break-word;
+}
+
+p {
+  text-align: left;
+  line-height: 1.5;
+}
+
+details {
+  text-align: left;
+  margin: 16px 0;
+}
+
+summary {
+  cursor: pointer;
+  font-weight: bold;
+}
+
+a {
+  word-break: break-word;
+}
+
+img {
+  max-width: 100%;
+  height: auto;
+  display: block;
+  margin: 0 auto 12px;
+}
+
+ul {
+  display: block;
+  text-align: left;
+  margin: 8px 0;
+  padding-left: 1.2em;
+  list-style: disc;
+}
+
+ul li {
+  margin-bottom: 8px;
+  line-height: 1.5;
+}
+
+@media (max-width: 480px) {
+  h1 {
+    font-size: 1.5rem;
+  }
+
+  body {
+    padding: 0 12px;
+  }
+
+  center {
+    padding: 16px 0;
+  }
+}
+
+.halny-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  background: transparent;
+  color: white;
+  border: 1px solid white;
+  padding: 8px 16px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  margin: 0 auto;
+}
+
+.halny-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.halny-btn:disabled {
+  opacity: 0.5;
+  cursor: default;
+}
+
+.halny-result-panel {
+  margin-top: 14px;
+  padding: 12px 16px;
+  border: 1px solid white;
+  border-radius: 4px;
+  text-align: left;
+  line-height: 1.5;
+  font-size: 0.95rem;
+}
+
+.halny-result-neutral {
+  border-color: #888;
+  color: #ccc;
+}
+
+.halny-result-good {
+  border-color: #4caf50;
+  color: #a5e8a8;
+}
+
+.halny-result-mid {
+  border-color: #e0c341;
+  color: #f0dd8f;
+}
+
+.halny-result-bad {
+  border-color: #e04141;
+  color: #f5a3a3;
+}
+
+.halny-result-warn {
+  border-color: #e08b41;
+  color: #f5c79c;
+}

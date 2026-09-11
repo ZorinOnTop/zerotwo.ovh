@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>zerotwo.ovh :: kochać halny</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.8/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <center>
+        <br>
+        <h1>zerotwo.ovh</h1>
+        <p>kocham routery halny, sa bardzo fajne! <3<br><i>(nowa strona wkrotce, mail: zorin@zerotwo.ovh)</i></p>
+        <details>
+            <summary>co to są routery halny, i dlaczego je hejtuje?</summary>
+            <p>Marka HALNy to polska marka routerów wyprodukowanych w Chinach przez <a href="https://rejestr.io/krs/113958/fibrain">Fibrain sp. z o.o.</a><br>
+                Routery HALNy to niestety zwykły badziew który dostajemy od lokalnych operatorów, który (według moich obserwacji):
+                <ul>
+                    <li>Bootloopuje się co 30 minut (wina procesora/update'u?)</li>
+                    <li>Operator może z nim robić co chce, 24/7 (<a href="https://www.tp-link.com/pl/solution/tr-069/">TR-069</a>), nawet jak router jest kupiony na własność. <i>(może go ograniczyc do minimum, czyli np. tylko do ustawień wi-fi)</i></li>
+                    <li>GUI jest zbugowane i wygląda na taki, jakby był robiony na kolanie  <i>(źródło: <a href="szczur/REDACTED-panel.png">screenshot panelu</a>)</i> oraz funkcje typu Port Forwarding są zbugowane (trzeba uzywać <a href="https://pl.wikipedia.org/wiki/UPnP">UPnP</a> żeby coś wystawić)</li>
+                    <li>No-name routery zawsze mogą mieć błędy i wtedy gdy ktoś znajdzie exploita, wtedy może wgrać złośliwe oprogramowanie, które zostanie wykorzystane do sprzedaży kogoś adresu IP (tzw. residential proxy), i później puk puk, policja.</li>
+                    <li>Routery HALNy hostują swój panel GUI na 0.0.0.0, przez co taki panel jest dostępny <b>dla każdego</b>, kto zna Twój publiczny adres IP! <i>(albo podczas skanu bota np. Shodana)</i>. Przez co np. mój ISP zablokował dla każdego port 80.</li>
+                    <li>Podczas dodawania portu przez Port Forwarding, to port na zewnątrz ma status (według nmapa) filtred. A gdy port jest dodawany przez UPnP, to ten port jest otwarty na zewnątrz. 🤡</li>
+                    <li>Pierwsze routery HALNy zostały wyprodukowane w 2018 roku, a Linux (na którym działa router) jest z 2014 roku (Linux 3.18.21).</li>
+                    <li>Routery HALNy działają na OpenWrt (dowód: pole Luci w odpowiedzi panelu logowania). Znalazłem <a href="https://community.intel.com/t5/Ethernet-Products/Lantiq-Falcon-SoC-FALC-ON-S-EASY98035ET-SDK-request/td-p/1628200">zgłoszenie na forum Intela</a>, gdzie użytkownik żądający kodu źródłowego SDK dla urządzenia HALNy HL-GSFP został odesłany do Intela/Lantiq, który odmówił z powodu NDA - co rodzi pytania o zgodność z GPLv2 dla komponentów opartych na jądrze Linux/OpenWrt.</li>
+                </ul>
+            <br>
+            <br>
+            <p>Niestety, dużo operatorów lokalnych nie chce mieć innych routerów (np. MikroTik) we swojej infrastrukturze.<br>Dlatego dopóki nie przeniose się do normalnego operatora, stronka będzie taka, jaka jest.</p>
+            </p>
+        </details>
+        <div id="halny-check-box" style="margin-top: 24px;">
+            <button id="halny-check-btn" class="halny-btn">Sprawdź czy Twój HALNy jest podatny</button>
+            <div id="halny-check-result" class="halny-result-panel" style="display: none;"></div>
+        </div>
+        <br>
+        <img src="szczur/brave_AnmrqIVeS7.png"><i>zbieg okoliczności: po hard reset moim routerze, kolega na tym samym ISP stracił na chwilę neta - 
+najpewniej efekt uboczny czegoś po stronie operatora (np. wspólny element infrastruktury/DHCP), 
+a nie efekt jakiegokolwiek ataku z mojej strony</i><br><br>
+        <img src="szczur/brave_BGioynLOs7.png"><br>
+        <img src="szczur/brave_v0djpqO4q3.png"><br>
+        <img src="szczur/brave_cL4rsNPEPE.png"><br>
+        <img src="szczur/brave_io4bRpJVqY.png"><br>
+        <video src="szczur/szpont.mp4" controls width="600"></video><br><i>po dodaniu 5+ portów, wywaliło listę portów</i><br><br>
+        <img src="szczur/kino.png" width="360px"><br>
+        <i>router działa na 0.0.0.0, a nie na 192.168.XX.XX<br>przez co ktoś może uzyskać dostęp do panelu<br>tak, sprawdzałem. nie można wyłączyć zdalnego kontrolowania</i>
+
+        <script>
+            document.getElementById('halny-check-btn').addEventListener('click', async function () {
+                const btn = document.getElementById('halny-check-btn');
+
+                btn.disabled = true;
+                setResultPanel('neutral', 'Sprawdzam...');
+
+                try {
+                    const res = await fetch('check.php', { method: 'GET' });
+
+                    if (res.status === 429) {
+                        const data = await res.json();
+                        const hours = Math.ceil((data.retry_after_seconds || 86400) / 3600);
+                        setResultPanel('warn', `Za dużo prób. Spróbuj ponownie za ok. ${hours}h.`);
+                        return;
+                    }
+
+                    if (res.status === 400) {
+                        setResultPanel('warn', 'Nie udało się ustalić Twojego adresu IP.');
+                        return;
+                    }
+
+                    if (!res.ok) {
+                        setResultPanel('warn', 'Coś poszło nie tak, spróbuj później.');
+                        return;
+                    }
+
+                    const data = await res.json();
+
+                    if (data.ishalny == 1 && data.isvuln === 'true') {
+                        setResultPanel('bad', '<h1>⚠️ Masz router HALNy i jego panel jest publicznie widoczny!</h1> Sprawdziliśmy na naszym serwerze, czy twój router jest widoczny z zewnątrz. Niestety, ale twój router może być podatny na ataki, dlatego:<ul><li>Zmień natychmiast hasło do panelu routera (jeżeli twój dostawca zmienia hasła na domyślne (łatwe)).</li><li>Zadzwoń do swojego dostawcy, aby zablokował na twoim adresie port 80 lub wogule wyłączył publiczne IP (jeżeli nie korzystasz z usług które wymagają wystawienia usługi na zewnątrz).</li><li>Jeżeli masz pieniądze, skontaktuj się z operatorem i zapytaj się o możliwość przełączenia routera na tryb bridge. Jeżeli operator może przełączyć twój router na tryb bridge, kup nowy router (polecamy MikroTika) i podłącz go do portu 1 w routerze i go skonfiguruj.</li></ul>Jeżeli nie możesz się dostać do routera, operator nie może zablokować portu 80, albo nie może przełączyć routera na tryb bridge, to niestety, ale twój router będzie podatny na ataki. Polecamy zmienić operatora na takiego, który nie używa routerów HALNy oraz pozwala na używanie własnego routera przez ONT.');
+                    } else if (data.ishalny == 1 && data.isvuln === 'false') {
+                        setResultPanel('mid', '<h1>✅ Masz router HALNy, ale panel wymaga logowania przez <a href="https://en.wikipedia.org/wiki/Basic_access_authentication" target="_blank">Basic access authentication</a>.</h1>Ten typ logowania jest słaby, ponieważ hasło jest przesyłane w postaci jawnej (Base64), ale przynajmniej nie jest publicznie dostępny panel. Jeżeli twój operator zmienia hasła na domyślne (łatwe), to zalecamy natychmiastową zmianę hasła do panelu routera.');
+                    } else {
+                        setResultPanel('good', '<h1>✅ Nie wykryto routera HALNy na Twoim publicznym IP (albo panel nie jest wystawiony na porcie 80).</h1>Jeżeli chcesz mieć pewność, że twój router nie jest podatny na ataki, wejdź na stronę <a href="https://www.shodan.io/" target="_blank">Shodan</a> i wyszukaj swój publiczny adres IP (IP znajdziesz na <a href="https://whatismyipaddress.com/" target="_blank">WhatIsMyIP.com</a>). Jeżeli nie znajdziesz żadnego wyniku, to znaczy, że twój router nie jest podatny na ataki.');
+                    }
+                } catch (e) {
+                    setResultPanel('warn', 'Błąd połączenia, spróbuj ponownie.');
+                } finally {
+                    btn.disabled = false;
+                }
+            });
+
+            function setResultPanel(kind, html) {
+                const resultEl = document.getElementById('halny-check-result');
+                resultEl.innerHTML = html;
+                resultEl.style.display = 'block';
+                resultEl.className = 'halny-result-panel halny-result-' + kind;
+            }
+        </script>
+    </center>
+</body>
+</html>
